@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
 import Stripe from "stripe";
 import nodemailer from "nodemailer";
 import { 
@@ -28,8 +27,8 @@ app.use(express.json());
 
 // Set up default settings config helper
 async function getStoreSettings() {
-  const docRef = doc(db, "settings", "store_config");
   try {
+    const docRef = doc(db, "settings", "store_config");
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return docSnap.data();
@@ -110,7 +109,11 @@ async function initializeDefaultProducts() {
 }
 
 // Boot setup
-initializeDefaultProducts().then(() => getStoreSettings());
+initializeDefaultProducts()
+  .then(() => getStoreSettings())
+  .catch((err) => {
+    console.error("Failed startup database routines gracefully:", err);
+  });
 
 // --- API ROUTES ---
 
@@ -572,6 +575,7 @@ app.post("/api/admin/test-email", checkAdminPasscode, async (req, res) => {
 // Mounting Vite middleware to serve client SPA in development, static hosting in production.
 async function resolveAndRun() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

@@ -1,0 +1,6 @@
+{
+  "name": "Digital Product Checkout & Delivery",
+  "description": "Secure integrated checkout and automated email download delivery for Google Sites digital graphics packs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

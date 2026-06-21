@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Global storefront configurations and credentials",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "adminPasscode": { "type": "string" },
+        "stripePublishableKey": { "type": "string" },
+        "stripeSecretKey": { "type": "string" },
+        "smtpHost": { "type": "string" },
+        "smtpPort": { "type": "number" },
+        "smtpUser": { "type": "string" },
+        "smtpPass": { "type": "string" },
+        "smtpFrom": { "type": "string" },
+        "senderName": { "type": "string" }
+      },
+      "required": ["storeName", "adminPasscode"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Metadata for a downloadable graphics pack product",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "emailSubject": { "type": "string" },
+        "emailBody": { "type": "string" },
+        "salesCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "fileUrl"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Checkout orders log and fulfillment status record",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentIntentId": { "type": "string" },
+        "status": { "type": "string" },
+        "emailSent": { "type": "boolean" },
+        "emailError": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "productName", "amount", "customerEmail", "status"]
+    }
+  },
+  "firestore": {
+    "settings/{settingId}": {
+      "schema": "StoreSettings",
+      "description": "Store configuration data"
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Products available in the store"
+    },
+    "transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Logged customer order history and statuses"
+    }
+  }
+}

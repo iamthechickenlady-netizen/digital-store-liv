@@ -572,6 +572,12 @@ app.post("/api/admin/test-email", checkAdminPasscode, async (req, res) => {
   }
 });
 
+// 12. Robots.txt for search engines
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain");
+  res.send("User-agent: *\nAllow: /\n");
+});
+
 // Mounting Vite middleware to serve client SPA in development, static hosting in production.
 async function resolveAndRun() {
   if (process.env.NODE_ENV !== "production") {

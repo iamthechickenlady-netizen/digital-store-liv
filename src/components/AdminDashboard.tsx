@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Product, Transaction, StoreSettings } from "../types";
+
+export const PRESET_CATEGORIES: Record<string, string[]> = {
+  "Canva Templates": ["Book Templates", "Birthday Party Invites", "Baby shower", "Wedding Shower", "Thank you Cards"],
+  "eBooks": ["Kid's Books", "Teen Books", "Adult stories", "Coloring Books", "Journals", "Cookbooks"],
+  "Graphic Sets": ["Animals", "Holiday", "Floral"],
+  "Procreate Brushes": ["Brush sets", "single brushes", "Textures"]
+};
 import { 
   Key, 
   Settings, 
@@ -63,6 +70,24 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
   const [selectedProduct, setSelectedProduct] = useState<Partial<Product> | null>(null);
   const [isEditingProduct, setIsEditingProduct] = useState(false);
   const [notification, setNotification] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  // States for dynamic category/subcategory creation
+  const [isCreatingCustomCategory, setIsCreatingCustomCategory] = useState(false);
+  const [isCreatingCustomSubcategory, setIsCreatingCustomSubcategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
+  const [customSubcategory, setCustomSubcategory] = useState("");
+
+  const existingCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
+  const allCategories = Array.from(new Set([...Object.keys(PRESET_CATEGORIES), ...existingCategories]));
+
+  const currentCategory = selectedProduct?.category || "";
+  const presetSubs = PRESET_CATEGORIES[currentCategory] || [];
+  const existingSubs = Array.from(new Set(
+    products
+      .filter(p => p.category === currentCategory && p.subcategory)
+      .map(p => p.subcategory as string)
+  ));
+  const allSubcategories = Array.from(new Set([...presetSubs, ...existingSubs]));
 
   // Test send SMTP state
   const [testEmailAddress, setTestEmailAddress] = useState("");
@@ -508,21 +533,27 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                       imageUrl: "",
                       fileUrl: "",
                       emailSubject: "Your purchase is ready for download!",
-                      emailBody: "Hi {customer_name},\n\nThank you for purchasing {product_name}!\n\nHere is your custom graphic pack file download url link:\n{download_link}\n\nBest,\nThe Store"
+                      emailBody: "Hi {customer_name},\n\nThank you for purchasing {product_name}!\n\nHere is your custom product file download url link:\n{download_link}\n\nBest,\nThe Store",
+                      category: "",
+                      subcategory: ""
                     });
+                    setIsCreatingCustomCategory(false);
+                    setIsCreatingCustomSubcategory(false);
+                    setCustomCategory("");
+                    setCustomSubcategory("");
                     setIsEditingProduct(true);
                   }}
                   id="btn-add-product"
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-black hover:bg-[#FF5722] text-white text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-[#e84e89] hover:bg-black text-white text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200"
                 >
                   <Plus className="w-4 h-4" />
-                  New graphics pack
+                  New product
                 </button>
               </div>
 
               {products.length === 0 ? (
                 <div className="p-12 text-center text-[#1A1A1A]/40 font-mono border-2 border-dashed border-[#E5E2DD] bg-white text-xs uppercase tracking-wider">
-                  No resource packs added yet. Click 'New graphics pack' to begin.
+                  No products added yet. Click 'New product' to begin.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -542,6 +573,20 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                             <span className="text-[10px] uppercase font-mono tracking-widest font-black text-[#FF5722] block">${p.price.toFixed(2)} USD</span>
                             <h4 className="font-extrabold text-[#1A1A1A] text-base font-serif italic truncate">{p.name}</h4>
                             <p className="text-xs text-[#1A1A1A]/60 line-clamp-1 mt-0.5">{p.description}</p>
+                            {(p.category || p.subcategory) && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {p.category && (
+                                  <span className="inline-block text-[9px] bg-[#e84e89]/10 text-[#e84e89] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                    {p.category}
+                                  </span>
+                                )}
+                                {p.subcategory && (
+                                  <span className="inline-block text-[9px] bg-teal-500/10 text-teal-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                    {p.subcategory}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -555,6 +600,10 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                         <button
                           onClick={() => {
                             setSelectedProduct(p);
+                            setIsCreatingCustomCategory(p.category ? !Object.keys(PRESET_CATEGORIES).includes(p.category) : false);
+                            setIsCreatingCustomSubcategory(p.subcategory ? !(p.category && PRESET_CATEGORIES[p.category]?.includes(p.subcategory)) : false);
+                            setCustomCategory(p.category || "");
+                            setCustomSubcategory(p.subcategory || "");
                             setIsEditingProduct(true);
                           }}
                           className="inline-flex items-center gap-1.5 text-xs text-black py-2 px-4 border border-black hover:bg-black hover:text-white transition-colors cursor-pointer uppercase tracking-wider font-bold text-[10px]"
@@ -567,7 +616,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                           className="inline-flex items-center gap-1.5 text-xs text-[#FF5722] py-2 px-4 border border-[#FF5722]/30 hover:bg-[#FF5722]/10 transition-colors cursor-pointer uppercase tracking-wider font-bold text-[10px]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          Delete Pack
+                          Delete Product
                         </button>
                       </div>
                     </div>
@@ -580,7 +629,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
               <form onSubmit={handleSaveProduct} className="bg-white border border-[#E5E2DD] p-8 space-y-8">
                 <div className="pb-4 border-b border-[#E5E2DD] flex items-center justify-between">
                   <h3 className="font-bold text-2xl font-serif italic text-[#1A1A1A] leading-none">
-                    {selectedProduct.id ? "Edit Graphics Pack Properties" : "Provision New Graphics Pack"}
+                    {selectedProduct.id ? "Edit Product Properties" : "Provision New Product"}
                   </h3>
                   <button
                     type="button"
@@ -598,7 +647,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                   {/* Left col */}
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Graphics pack name</label>
+                      <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Product name</label>
                       <input
                         type="text"
                         required
@@ -607,6 +656,111 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                         onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
                         className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-sm"
                       />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Category</label>
+                        {isCreatingCustomCategory ? (
+                          <div className="flex flex-col gap-1.5">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Type custom category name..."
+                              value={customCategory}
+                              onChange={(e) => {
+                                setCustomCategory(e.target.value);
+                                setSelectedProduct({ ...selectedProduct, category: e.target.value });
+                              }}
+                              className="w-full px-3 py-2.5 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCreatingCustomCategory(false);
+                                setCustomCategory("");
+                                setSelectedProduct({ ...selectedProduct, category: "" });
+                              }}
+                              className="text-[9px] font-bold text-left text-gray-500 hover:text-black uppercase tracking-wider underline cursor-pointer"
+                            >
+                              Choose Preset
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedProduct.category || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "__new__") {
+                                setIsCreatingCustomCategory(true);
+                                setCustomCategory("");
+                                setSelectedProduct({ ...selectedProduct, category: "", subcategory: "" });
+                              } else {
+                                setSelectedProduct({ ...selectedProduct, category: val, subcategory: "" });
+                              }
+                            }}
+                            className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs h-[46px]"
+                          >
+                            <option value="">No Category</option>
+                            {allCategories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                            <option value="__new__" className="text-[#e84e89] font-bold">+ Add Custom Category...</option>
+                          </select>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Subcategory</label>
+                        {isCreatingCustomSubcategory ? (
+                          <div className="flex flex-col gap-1.5">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Type custom subcategory..."
+                              value={customSubcategory}
+                              onChange={(e) => {
+                                setCustomSubcategory(e.target.value);
+                                setSelectedProduct({ ...selectedProduct, subcategory: e.target.value });
+                              }}
+                              className="w-full px-3 py-2.5 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCreatingCustomSubcategory(false);
+                                setCustomSubcategory("");
+                                setSelectedProduct({ ...selectedProduct, subcategory: "" });
+                              }}
+                              className="text-[9px] font-bold text-left text-gray-500 hover:text-black uppercase tracking-wider underline cursor-pointer"
+                            >
+                              Choose Preset
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedProduct.subcategory || ""}
+                            disabled={!selectedProduct.category}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "__new__") {
+                                setIsCreatingCustomSubcategory(true);
+                                setCustomSubcategory("");
+                                setSelectedProduct({ ...selectedProduct, subcategory: "" });
+                              } else {
+                                setSelectedProduct({ ...selectedProduct, subcategory: val });
+                              }
+                            }}
+                            className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs h-[46px] disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="">No Subcategory</option>
+                            {allSubcategories.map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                            <option value="__new__" className="text-[#e84e89] font-bold">+ Add Custom Subcategory...</option>
+                          </select>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

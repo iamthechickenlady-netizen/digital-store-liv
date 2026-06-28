@@ -131,9 +131,9 @@ export default function App() {
   const currentProduct = products.find(p => p.id === selectedProductId);
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] text-[#1A1A1A] flex flex-col justify-between selection:bg-[#FF5722] selection:text-white">
+    <div className="min-h-screen bg-[#FDFBF7] text-[#1A1A1A] flex flex-col justify-between selection:bg-[#e84e89] selection:text-white">
       {/* Top Header Navigation Rail */}
-      <header className="sticky top-0 bg-[#F9F8F6]/95 backdrop-blur-md border-b border-[#E5E2DD] z-20 transition-all">
+      <header className="sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#eadecc] z-20 transition-all">
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <button
             onClick={() => navigateTo("/")}
@@ -141,9 +141,9 @@ export default function App() {
             className="flex items-center gap-3 group cursor-pointer focus:outline-hidden"
           >
             <div className="text-xl font-black tracking-tighter uppercase font-sans">
-              RLB<span className="text-[#FF5722]">.</span>Designs
+              RLB<span className="text-[#e84e89]">.</span>Designs
             </div>
-            <div className="flex items-center gap-1.5 bg-[#E5E2DD]/60 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-[#1A1A1A]/80">
+            <div className="flex items-center gap-1.5 bg-[#29a5ac]/10 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-[#29a5ac]">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
               Digital Store
             </div>
@@ -154,8 +154,8 @@ export default function App() {
               onClick={() => navigateTo("/")}
               className={`pb-1 transition-all border-b-2 cursor-pointer ${
                 view === "home" || view === "product-checkout"
-                  ? "border-black text-black"
-                  : "border-transparent text-[#1A1A1A]/40 hover:text-black hover:border-black/20"
+                  ? "border-[#e84e89] text-[#e84e89]"
+                  : "border-transparent text-gray-400 hover:text-[#e84e89] hover:border-[#e84e89]/40"
               }`}
             >
               Catalog
@@ -163,7 +163,7 @@ export default function App() {
             {view === "admin" && (
               <button
                 onClick={() => navigateTo("/admin")}
-                className="pb-1 transition-all border-b-2 cursor-pointer inline-flex items-center gap-1.5 border-black text-black"
+                className="pb-1 transition-all border-b-2 cursor-pointer inline-flex items-center gap-1.5 border-[#29a5ac] text-[#29a5ac]"
               >
                 <LayoutDashboard className="w-3.5 h-3.5 stroke-[2]" />
                 Store Admin
@@ -226,10 +226,10 @@ export default function App() {
       </main>
 
       {/* Footer Branding Bar */}
-      <footer className="bg-[#F9F8F6] border-t border-[#E5E2DD] py-10 text-center text-xs text-[#1A1A1A]/40 font-sans">
+      <footer className="bg-[#FDFBF7] border-t border-[#eadecc] py-10 text-center text-xs text-[#1A1A1A]/40 font-sans">
         <div className="max-w-6xl mx-auto px-6 space-y-3">
           <div className="flex justify-center items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]/70">
-            <ShieldCheck className="w-4 h-4 text-[#FF5722]" />
+            <ShieldCheck className="w-4 h-4 text-[#e84e89]" />
             <span>Secure SSL Integration</span>
           </div>
           <p className="text-[11px] opacity-80">

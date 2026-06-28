@@ -445,14 +445,17 @@ app.get("/api/admin/settings", checkAdminPasscode, async (req, res) => {
 app.post("/api/admin/settings", checkAdminPasscode, async (req, res) => {
   try {
     const updatedSettings = req.body;
+    console.log("Saving store settings request received:", updatedSettings);
     if (!updatedSettings.adminPasscode || updatedSettings.adminPasscode.trim() === "") {
       return res.status(400).json({ error: "Passcode cannot be set empty" });
     }
     const docRef = doc(db, "settings", "store_config");
     await setDoc(docRef, updatedSettings);
+    console.log("Store settings saved successfully!");
     res.json({ success: true, settings: updatedSettings });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("CRITICAL ERROR SAVING STORE SETTINGS:", error);
+    res.status(500).json({ error: error.message || "Failed to write settings to the persistent database" });
   }
 });
 
@@ -473,7 +476,9 @@ app.post("/api/admin/products", checkAdminPasscode, async (req, res) => {
       fileUrl: product.fileUrl,
       emailSubject: product.emailSubject || "Your design download link is here!",
       emailBody: product.emailBody || "Hi {customer_name},\n\nHere is your graphic download: {download_link}",
-      createdAt: product.createdAt || Date.now()
+      createdAt: product.createdAt || Date.now(),
+      category: product.category || "",
+      subcategory: product.subcategory || ""
     };
 
     if (product.id) {

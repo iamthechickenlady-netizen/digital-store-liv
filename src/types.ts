@@ -9,6 +9,8 @@ export interface Product {
   emailSubject: string; // Delivery email subject
   emailBody: string; // Delivery email body template
   createdAt: number;
+  category?: string;
+  subcategory?: string;
 }
 
 export interface Transaction {

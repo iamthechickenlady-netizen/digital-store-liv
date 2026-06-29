@@ -127,6 +127,7 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedMicrocategory, setSelectedMicrocategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [welcomeIndex, setWelcomeIndex] = useState(0);
@@ -156,10 +157,28 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
     "Procreate Brushes": ["Brush sets", "single brushes", "Textures"]
   };
 
+  const presetMicros: Record<string, Record<string, string[]>> = {
+    "eBooks": {
+      "Coloring Books": ["Adult coloring books", "Children's coloring books", "Holiday coloring books"]
+    },
+    "Canva Templates": {
+      "Book Templates": ["Planners & Trackers", "Recipe Books", "Notebook Layouts"]
+    }
+  };
+
   const displaySubcategories = selectedCategory 
     ? Array.from(new Set([
         ...(presetSubs[selectedCategory] || []),
         ...products.filter(p => p.category === selectedCategory && p.subcategory).map(p => p.subcategory as string)
+      ]))
+    : [];
+
+  const displayMicrocategories = (selectedCategory && selectedSubcategory)
+    ? Array.from(new Set([
+        ...(presetMicros[selectedCategory]?.[selectedSubcategory] || []),
+        ...products
+          .filter(p => p.category === selectedCategory && p.subcategory === selectedSubcategory && p.microcategory)
+          .map(p => p.microcategory as string)
       ]))
     : [];
 
@@ -184,16 +203,18 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
     }
   };
 
-  // Filter products by category, subcategory, and search term
+  // Filter products by category, subcategory, microcategory, and search term
   const filteredProducts = products.filter((p) => {
     const matchesCategory = !selectedCategory || p.category === selectedCategory;
     const matchesSubcategory = !selectedSubcategory || p.subcategory === selectedSubcategory;
+    const matchesMicrocategory = !selectedMicrocategory || p.microcategory === selectedMicrocategory;
     const matchesSearch = !searchQuery.trim() || 
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.subcategory && p.subcategory.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSubcategory && matchesSearch;
+      (p.subcategory && p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.microcategory && p.microcategory.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCategory && matchesSubcategory && matchesMicrocategory && matchesSearch;
   });
 
   const sortedAndFilteredProducts = [...filteredProducts].sort((a, b) => {
@@ -299,6 +320,7 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
             onClick={() => {
               setSelectedCategory("");
               setSelectedSubcategory("");
+              setSelectedMicrocategory("");
             }}
             className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border ${
               !selectedCategory
@@ -321,6 +343,7 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
                 onClick={() => {
                   setSelectedCategory(cat);
                   setSelectedSubcategory("");
+                  setSelectedMicrocategory("");
                 }}
                 className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer border relative ${
                   isSelected
@@ -347,7 +370,10 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
               className="flex flex-wrap gap-2 p-4 bg-[#fdfaf5] border border-[#eadecc]/60 rounded-2xl"
             >
               <button
-                onClick={() => setSelectedSubcategory("")}
+                onClick={() => {
+                  setSelectedSubcategory("");
+                  setSelectedMicrocategory("");
+                }}
                 className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                   !selectedSubcategory
                     ? "bg-[#29a5ac]/15 text-[#1e8187] border border-[#29a5ac]/35"
@@ -356,13 +382,16 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
               >
                 All {selectedCategory}
               </button>
-
+ 
               {displaySubcategories.map((sub) => {
                 const isSelected = selectedSubcategory === sub;
                 return (
                   <button
                     key={sub}
-                    onClick={() => setSelectedSubcategory(sub)}
+                    onClick={() => {
+                      setSelectedSubcategory(sub);
+                      setSelectedMicrocategory("");
+                    }}
                     className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                       isSelected
                         ? "bg-[#29a5ac]/15 text-[#1e8187] border border-[#29a5ac]/35"
@@ -370,6 +399,46 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
                     }`}
                   >
                     {sub}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Microcategories Bar (only shown if category & subcategory are selected) */}
+        <AnimatePresence>
+          {selectedCategory && selectedSubcategory && displayMicrocategories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-wrap gap-2 p-4 bg-[#fcf9f4] border border-amber-200/50 rounded-2xl md:ml-4"
+            >
+              <button
+                onClick={() => setSelectedMicrocategory("")}
+                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                  !selectedMicrocategory
+                    ? "bg-amber-500/15 text-amber-700 border border-amber-500/35"
+                    : "bg-white text-gray-400 border border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                All {selectedSubcategory}
+              </button>
+
+              {displayMicrocategories.map((micro) => {
+                const isSelected = selectedMicrocategory === micro;
+                return (
+                  <button
+                    key={micro}
+                    onClick={() => setSelectedMicrocategory(micro)}
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                      isSelected
+                        ? "bg-amber-500/15 text-amber-700 border border-amber-500/35"
+                        : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {micro}
                   </button>
                 );
               })}
@@ -388,6 +457,7 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
             onClick={() => {
               setSelectedCategory("");
               setSelectedSubcategory("");
+              setSelectedMicrocategory("");
               setSearchQuery("");
             }}
             className="px-4 py-2 bg-black text-white text-xs font-bold rounded-full uppercase tracking-wider hover:bg-[#e84e89]"
@@ -466,6 +536,12 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
                       <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-gray-400 font-mono">
                         <span>•</span>
                         <span>{product.subcategory || "Digital Download"}</span>
+                        {product.microcategory && (
+                          <>
+                            <span className="text-gray-300 font-normal">/</span>
+                            <span className="text-amber-600 font-bold">{product.microcategory}</span>
+                          </>
+                        )}
                       </div>
                       <span className="text-gray-300 text-xs font-mono">|</span>
                       

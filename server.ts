@@ -478,7 +478,8 @@ app.post("/api/admin/products", checkAdminPasscode, async (req, res) => {
       emailBody: product.emailBody || "Hi {customer_name},\n\nHere is your graphic download: {download_link}",
       createdAt: product.createdAt || Date.now(),
       category: product.category || "",
-      subcategory: product.subcategory || ""
+      subcategory: product.subcategory || "",
+      microcategory: product.microcategory || ""
     };
 
     if (product.id) {

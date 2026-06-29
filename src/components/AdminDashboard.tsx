@@ -7,6 +7,15 @@ export const PRESET_CATEGORIES: Record<string, string[]> = {
   "Graphic Sets": ["Animals", "Holiday", "Floral"],
   "Procreate Brushes": ["Brush sets", "single brushes", "Textures"]
 };
+
+export const PRESET_MICRO_CATEGORIES: Record<string, Record<string, string[]>> = {
+  "eBooks": {
+    "Coloring Books": ["Adult coloring books", "Children's coloring books", "Holiday coloring books"]
+  },
+  "Canva Templates": {
+    "Book Templates": ["Planners & Trackers", "Recipe Books", "Notebook Layouts"]
+  }
+};
 import { 
   Key, 
   Settings, 
@@ -74,8 +83,10 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
   // States for dynamic category/subcategory creation
   const [isCreatingCustomCategory, setIsCreatingCustomCategory] = useState(false);
   const [isCreatingCustomSubcategory, setIsCreatingCustomSubcategory] = useState(false);
+  const [isCreatingCustomMicrocategory, setIsCreatingCustomMicrocategory] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
   const [customSubcategory, setCustomSubcategory] = useState("");
+  const [customMicrocategory, setCustomMicrocategory] = useState("");
 
   const existingCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
   const allCategories = Array.from(new Set([...Object.keys(PRESET_CATEGORIES), ...existingCategories]));
@@ -88,6 +99,15 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
       .map(p => p.subcategory as string)
   ));
   const allSubcategories = Array.from(new Set([...presetSubs, ...existingSubs]));
+
+  const currentSubcategory = selectedProduct?.subcategory || "";
+  const presetMicros = PRESET_MICRO_CATEGORIES[currentCategory]?.[currentSubcategory] || [];
+  const existingMicros = Array.from(new Set(
+    products
+      .filter(p => p.category === currentCategory && p.subcategory === currentSubcategory && p.microcategory)
+      .map(p => p.microcategory as string)
+  ));
+  const allMicrocategories = Array.from(new Set([...presetMicros, ...existingMicros]));
 
   // Test send SMTP state
   const [testEmailAddress, setTestEmailAddress] = useState("");
@@ -535,12 +555,15 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                       emailSubject: "Your purchase is ready for download!",
                       emailBody: "Hi {customer_name},\n\nThank you for purchasing {product_name}!\n\nHere is your custom product file download url link:\n{download_link}\n\nBest,\nThe Store",
                       category: "",
-                      subcategory: ""
+                      subcategory: "",
+                      microcategory: ""
                     });
                     setIsCreatingCustomCategory(false);
                     setIsCreatingCustomSubcategory(false);
+                    setIsCreatingCustomMicrocategory(false);
                     setCustomCategory("");
                     setCustomSubcategory("");
+                    setCustomMicrocategory("");
                     setIsEditingProduct(true);
                   }}
                   id="btn-add-product"
@@ -573,7 +596,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                             <span className="text-[10px] uppercase font-mono tracking-widest font-black text-[#FF5722] block">${p.price.toFixed(2)} USD</span>
                             <h4 className="font-extrabold text-[#1A1A1A] text-base font-serif italic truncate">{p.name}</h4>
                             <p className="text-xs text-[#1A1A1A]/60 line-clamp-1 mt-0.5">{p.description}</p>
-                            {(p.category || p.subcategory) && (
+                            {(p.category || p.subcategory || p.microcategory) && (
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {p.category && (
                                   <span className="inline-block text-[9px] bg-[#e84e89]/10 text-[#e84e89] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -585,25 +608,36 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                                     {p.subcategory}
                                   </span>
                                 )}
+                                {p.microcategory && (
+                                  <span className="inline-block text-[9px] bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                    {p.microcategory}
+                                  </span>
+                                )}
                               </div>
                             )}
                           </div>
                         </div>
-
+ 
                         <div className="p-4 bg-[#F9F8F6] border border-[#E5E2DD] font-mono text-[10px] space-y-1.5 block text-[#1A1A1A]/80 overflow-hidden leading-relaxed">
                           <div><span className="text-[#1A1A1A]/40 font-bold uppercase tracking-wider">Secure url:</span> <span className="text-[#1A1A1A] truncate inline-block max-w-[200px]">{p.fileUrl}</span></div>
                           <div><span className="text-[#1A1A1A]/40 font-bold uppercase tracking-wider">Email subject:</span> <span className="text-[#1A1A1A] truncate inline-block max-w-[150px]">{p.emailSubject}</span></div>
                         </div>
                       </div>
-
+ 
                       <div className="flex justify-end gap-3 border-t border-[#E5E2DD] pt-4">
                         <button
                           onClick={() => {
+                            const isPresetCat = p.category ? Object.keys(PRESET_CATEGORIES).includes(p.category) : false;
+                            const isPresetSub = p.category && p.subcategory ? PRESET_CATEGORIES[p.category]?.includes(p.subcategory) : false;
+                            const isPresetMicro = p.category && p.subcategory && p.microcategory ? PRESET_MICRO_CATEGORIES[p.category]?.[p.subcategory]?.includes(p.microcategory) : false;
+
                             setSelectedProduct(p);
-                            setIsCreatingCustomCategory(p.category ? !Object.keys(PRESET_CATEGORIES).includes(p.category) : false);
-                            setIsCreatingCustomSubcategory(p.subcategory ? !(p.category && PRESET_CATEGORIES[p.category]?.includes(p.subcategory)) : false);
+                            setIsCreatingCustomCategory(p.category ? !isPresetCat : false);
+                            setIsCreatingCustomSubcategory(p.subcategory ? !isPresetSub : false);
+                            setIsCreatingCustomMicrocategory(p.microcategory ? !isPresetMicro : false);
                             setCustomCategory(p.category || "");
                             setCustomSubcategory(p.subcategory || "");
+                            setCustomMicrocategory(p.microcategory || "");
                             setIsEditingProduct(true);
                           }}
                           className="inline-flex items-center gap-1.5 text-xs text-black py-2 px-4 border border-black hover:bg-black hover:text-white transition-colors cursor-pointer uppercase tracking-wider font-bold text-[10px]"
@@ -658,7 +692,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Category</label>
                         {isCreatingCustomCategory ? (
@@ -679,7 +713,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                               onClick={() => {
                                 setIsCreatingCustomCategory(false);
                                 setCustomCategory("");
-                                setSelectedProduct({ ...selectedProduct, category: "" });
+                                setSelectedProduct({ ...selectedProduct, category: "", subcategory: "", microcategory: "" });
                               }}
                               className="text-[9px] font-bold text-left text-gray-500 hover:text-black uppercase tracking-wider underline cursor-pointer"
                             >
@@ -694,9 +728,9 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                               if (val === "__new__") {
                                 setIsCreatingCustomCategory(true);
                                 setCustomCategory("");
-                                setSelectedProduct({ ...selectedProduct, category: "", subcategory: "" });
+                                setSelectedProduct({ ...selectedProduct, category: "", subcategory: "", microcategory: "" });
                               } else {
-                                setSelectedProduct({ ...selectedProduct, category: val, subcategory: "" });
+                                setSelectedProduct({ ...selectedProduct, category: val, subcategory: "", microcategory: "" });
                               }
                             }}
                             className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs h-[46px]"
@@ -730,7 +764,7 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                               onClick={() => {
                                 setIsCreatingCustomSubcategory(false);
                                 setCustomSubcategory("");
-                                setSelectedProduct({ ...selectedProduct, subcategory: "" });
+                                setSelectedProduct({ ...selectedProduct, subcategory: "", microcategory: "" });
                               }}
                               className="text-[9px] font-bold text-left text-gray-500 hover:text-black uppercase tracking-wider underline cursor-pointer"
                             >
@@ -746,9 +780,9 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                               if (val === "__new__") {
                                 setIsCreatingCustomSubcategory(true);
                                 setCustomSubcategory("");
-                                setSelectedProduct({ ...selectedProduct, subcategory: "" });
+                                setSelectedProduct({ ...selectedProduct, subcategory: "", microcategory: "" });
                               } else {
-                                setSelectedProduct({ ...selectedProduct, subcategory: val });
+                                setSelectedProduct({ ...selectedProduct, subcategory: val, microcategory: "" });
                               }
                             }}
                             className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs h-[46px] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -758,6 +792,57 @@ export default function AdminDashboard({ products, onRefreshProducts }: AdminDas
                               <option key={sub} value={sub}>{sub}</option>
                             ))}
                             <option value="__new__" className="text-[#e84e89] font-bold">+ Add Custom Subcategory...</option>
+                          </select>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#1A1A1A]/60 uppercase tracking-widest mb-2">Micro-category (optional)</label>
+                        {isCreatingCustomMicrocategory ? (
+                          <div className="flex flex-col gap-1.5">
+                            <input
+                              type="text"
+                              placeholder="Type custom micro-category..."
+                              value={customMicrocategory}
+                              onChange={(e) => {
+                                setCustomMicrocategory(e.target.value);
+                                setSelectedProduct({ ...selectedProduct, microcategory: e.target.value });
+                              }}
+                              className="w-full px-3 py-2.5 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCreatingCustomMicrocategory(false);
+                                setCustomMicrocategory("");
+                                setSelectedProduct({ ...selectedProduct, microcategory: "" });
+                              }}
+                              className="text-[9px] font-bold text-left text-gray-500 hover:text-black uppercase tracking-wider underline cursor-pointer"
+                            >
+                              Choose Preset
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedProduct.microcategory || ""}
+                            disabled={!selectedProduct.subcategory}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "__new__") {
+                                setIsCreatingCustomMicrocategory(true);
+                                setCustomMicrocategory("");
+                                setSelectedProduct({ ...selectedProduct, microcategory: "" });
+                              } else {
+                                setSelectedProduct({ ...selectedProduct, microcategory: val });
+                              }
+                            }}
+                            className="w-full px-4 py-3 border border-[#E5E2DD] bg-[#F9F8F6] focus:outline-hidden focus:border-black text-[#1A1A1A] text-xs h-[46px] disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="">No Micro-category</option>
+                            {allMicrocategories.map(mic => (
+                              <option key={mic} value={mic}>{mic}</option>
+                            ))}
+                            <option value="__new__" className="text-[#e84e89] font-bold">+ Add Custom Micro-category...</option>
                           </select>
                         )}
                       </div>

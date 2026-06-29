@@ -11,6 +11,7 @@ export interface Product {
   createdAt: number;
   category?: string;
   subcategory?: string;
+  microcategory?: string;
 }
 
 export interface Transaction {

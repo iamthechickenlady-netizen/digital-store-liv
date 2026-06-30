@@ -209,8 +209,8 @@ export default function StoreFront({ products, onInitiateCheckout, isCheckoutLoa
     const matchesSubcategory = !selectedSubcategory || p.subcategory === selectedSubcategory;
     const matchesMicrocategory = !selectedMicrocategory || p.microcategory === selectedMicrocategory;
     const matchesSearch = !searchQuery.trim() || 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (p.subcategory && p.subcategory.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (p.microcategory && p.microcategory.toLowerCase().includes(searchQuery.toLowerCase()));

@@ -71,13 +71,16 @@ export default function App() {
     const handlePopState = () => parseRoutes();
     window.addEventListener("popstate", handlePopState);
 
-    // Load available graphics catalog
-    fetchProducts();
-
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
+
+  useEffect(() => {
+    if (view === "home" || view === "product-checkout") {
+      fetchProducts();
+    }
+  }, [view]);
 
   const fetchProducts = async () => {
     try {

@@ -463,7 +463,7 @@ app.post("/api/admin/settings", checkAdminPasscode, async (req, res) => {
 app.post("/api/admin/products", checkAdminPasscode, async (req, res) => {
   try {
     const product = req.body;
-    if (!product.name || !product.price || !product.fileUrl) {
+    if (!product.name || product.price === undefined || product.price === null || product.price === "" || !product.fileUrl) {
       return res.status(400).json({ error: "Required: Name, price, fileUrl" });
     }
 
